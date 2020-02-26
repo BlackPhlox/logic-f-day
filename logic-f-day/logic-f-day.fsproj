@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="PrintTree.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
