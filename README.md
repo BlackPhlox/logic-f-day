@@ -1,7 +1,7 @@
 # Logic-F-day
 Implementing the same functionality of Logic Friday to F#
 
-```
+```c#
 let nandonly = nandGateSimplify ((NOT (IN "A").-&. IN "B") .*|. NOT (IN "A" .|. NOT(IN "A")))
 PrintGateTree (nandonly)
 ```
