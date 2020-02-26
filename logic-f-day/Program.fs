@@ -136,6 +136,8 @@
             | XOR (a,b)  -> Node (aux a , "x+"         , aux b)
         aux g
 
+    let PrintGateTree g = PrintTree (gateTree(g))  
+
     //Tree Tests
 
     let type01 = OUT("O1", OUT("O2",((IN "A") .&. B true)) .&. (IN "B"))
@@ -345,7 +347,7 @@
     let sr_r09 = print (gateSimplify( IN "A" .&. NOT(IN "A")))             //A AND B
     let sr_r10 = print (gateSimplify( IN "A" .|. (NOT(IN "A") .&. IN "B")))//A OR  B
 
-    let gs1 = nandGateSimplify (gateSimplify (XOR(NAND(NOT (IN "A"), IN "B"),NOT (OR (IN "A",NOT(IN "A"))))))
+    let gs1 = nandGateSimplify (gateSimplify ((NOT (IN "A").-&. IN "B") .*|. NOT (IN "A" .|. NOT(IN "A"))))
 
     let p1 = print gs1
 
@@ -354,6 +356,10 @@
     printfn "%A" (gateString gs1)
     PrintTree (gateTree(gs1))
 
-    let ft = B true .-|. B false
+    let ft = NOT (IN "B") .-|. IN "A"
     PrintTree (gateTree(ft))
+    let ou2 = gateSimplify ft
+    let out = gateEval ft st
+
+    PrintGateTree (gs1)
     
