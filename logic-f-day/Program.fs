@@ -291,6 +291,8 @@
             nandGateSimplify (ma .-&. ba)
         | g         -> gateSimplify g
 
+    let rec restrictedGateSimplify g gates:gExp list =
+        List.Empty
 
     let rec print g =
         match g with
@@ -310,7 +312,43 @@
             | NOT(x) , i -> aux x i
             | _ , i -> i
         aux a List.Empty
-       
+
+    printfn "%-5s" ("|")
+    printfn "%5d%A" (2 + 2) "A"
+    printfn "%-5d" (2 + 2)
+
+    let printCol (s:(string*int) list) = 
+        let rec aux (sln:(string*int) list) acc = 
+            match sln with
+            | [] -> acc
+            | x::xs -> "| " + (String.replicate (snd x) " ") + fst x + " " + aux xs acc
+            
+        let s = (aux s "")
+        printfn "%s" (s + "|")
+    
+    let sl0 = ["ABC";"B"]
+    let sl1 = ["T";"F"]
+
+    let csl = [sl0;sl1]
+
+    let findMax (l:string list) = 
+      let rec helper((l:string list),m) =
+        match l with
+        | [] -> m
+        | (x::xs) -> helper(xs, if (x.Length > m) then x.Length else m)
+      helper (l,0)
+
+    let ll (il:string list list) =
+        let m = il.[0]
+        let maxLength = findMax m
+        let mm = (List.map(fun (x:string) -> (x,maxLength-x.Length)) il.[0])
+        printCol mm
+        for j = 1 to il.Length-1 do
+            printCol (List.map(fun x -> (x,maxLength-x.Length)) il.[j])
+    ll csl
+
+    let ggg = IN "A" .|. IN "B"
+
     //Tests
 
     let gs01 = gateSimplify (NOT (NOT(IN("B"))))
@@ -321,7 +359,6 @@
     let gs04 = gateSimplify(OR(IN "A",IN "A"))
 
     let gs05 = gateSimplify(AND(IN "x",OR(IN "x",IN "B")))
-
 
     //Test Simplify rules
 
@@ -362,4 +399,4 @@
     let out = gateEval ft st
 
     PrintGateTree (gs1)
-    
+        
