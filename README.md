@@ -23,3 +23,12 @@ A A   ~*    ~*    ~*    ~*          A A   ~*    ~*    ~*    ~*    A A ~*  ~*  A 
           / \ / \     / \ / \                 / \ / \     / \ / \                        
           A A A A     A A A A                 A A A A     A A A A                        
 ```
+
+```c#
+TruthTable (NOT(IN "A") .&. IN "A")
+| A | A | O |
+| T | T | F |
+| F | T | F |
+| T | F | F |
+| F | F | F |
+```
