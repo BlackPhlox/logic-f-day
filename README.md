@@ -25,7 +25,7 @@ A A   ~*    ~*    ~*    ~*          A A   ~*    ~*    ~*    ~*    A A ~*  ~*  A 
 ```
 
 ```c#
-TruthTable (NOT (AND(IN("A"),IN("B"))));;
+TruthTable (NOT (AND(IN("A"),IN("B"))))
 | A | B | O |
 | T | T | F |
 | F | T | T |
