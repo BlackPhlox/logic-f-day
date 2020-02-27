@@ -155,6 +155,10 @@
 
 
     //Evaluation
+
+    let getBoolB (g:gExp) : bool =
+        match g with
+        | B x -> x
     
     let getBool (b:gExpResult) : bool =
         match b with
@@ -311,28 +315,13 @@
             match a with
             | B x -> acc
             | IN(x) -> x :: aux (B false) acc
+            | NOT(x)  ->  aux x acc
             | AND(x,y)  ->  aux x (aux y acc)
             | NAND(x,y) ->  aux x (aux y acc)
             | OR(x,y)   ->  aux x (aux y acc)
             | NOR(x,y)  ->  aux x (aux y acc)
+            | XOR(x,y)  ->  aux x (aux y acc)
         aux a List.Empty
-
-    let ggg = IN "A" .|. IN "B"
-
-    IOList ggg
-
-    let GenLists (list:'a list) =
-        Convert.ToInt32(2.0 ** float list.Length)
-
-    let GenTruthTable size =
-        let vlength = Convert.ToInt32(2.0 ** float size)
-        [for i in 0..vlength-1 -> [for y in 0..size-1 -> (i >>> y) % 2]]
-
-    (*
-    let meh3 = [for i in fs -> (i >>> 0) % 2]
-    let meh2 = [for i in fs -> (i >>> 1)%2]
-    let meh = [for i in fs -> (i >>> 2)%2]
-    *)
 
     let printCol (s:(string*int) list) = 
         let rec aux (sln:(string*int) list) acc = 
@@ -358,12 +347,37 @@
         for j = 1 to il.Length-1 do
             printCol (List.map(fun x -> (x,maxLength-x.Length)) il.[j])
 
-    let sl0 = ["ABC";"B"]
-    let sl1 = ["T";"F"]
+    let GenTruthTable size =
+        let vlength = Convert.ToInt32(2.0 ** float size)
+        [for i in 0..vlength-1 -> [for y in 0..size-1 -> (i >>> y) % 2 = 0]]
 
-    let csl = [sl0;sl1]
+    let GenLists (list:'a list) =
+        GenTruthTable list.Length
 
-    ll csl
+    let TruthTable g =
+        let io = IOList g
+        let bools = GenLists io
+        let sts = [for bl in bools -> List.map2(fun x y -> (y, B x)) bl io]
+
+        let results = List.map (fun x -> gateEval g (Map.ofList x)) sts
+
+        let io = io @ ["O"]
+
+        let bb = List.map (fun x -> getBool x) results
+
+        let rows = List.map(fun j -> List.map (fun (x,y) -> if getBoolB y then "T" else "F" ) j ) sts 
+
+        let newt = List.map2 (fun x b -> x@[(if b then "T" else "F")]) rows bb
+
+        let com = io::newt
+        ll com
+
+    (*
+    let meh3 = [for i in fs -> (i >>> 0) % 2]
+    let meh2 = [for i in fs -> (i >>> 1)%2]
+    let meh = [for i in fs -> (i >>> 2)%2]
+    *)
+
 
     //Tests
 
