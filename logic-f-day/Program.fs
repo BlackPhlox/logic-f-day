@@ -324,18 +324,15 @@
     let GenLists (list:'a list) =
         Convert.ToInt32(2.0 ** float list.Length)
 
-    let Gen2 e =
-        let io = IOList(e)
-        let size = GenLists (io)
-        [ for z in 1 .. size -> Seq.init io.Length (fun i -> if i % z = 0 then "T" else "F") |> Seq.toList ]
-        //bs :: [ for c in 1 .. size -> Seq.init size (fun i -> i <> i) |> Seq.toList ]
-            //(Seq.init size (fun i -> false))
+    let GenTruthTable size =
+        let vlength = Convert.ToInt32(2.0 ** float size)
+        [for i in 0..vlength-1 -> [for y in 0..size-1 -> (i >>> y) % 2]]
 
-    Gen2 ggg
-
-    printfn "%-5s" ("|")
-    printfn "%5d%A" (2 + 2) "A"
-    printfn "%-5d" (2 + 2)
+    (*
+    let meh3 = [for i in fs -> (i >>> 0) % 2]
+    let meh2 = [for i in fs -> (i >>> 1)%2]
+    let meh = [for i in fs -> (i >>> 2)%2]
+    *)
 
     let printCol (s:(string*int) list) = 
         let rec aux (sln:(string*int) list) acc = 
@@ -345,11 +342,6 @@
             
         let s = (aux s "")
         printfn "%s" (s + "|")
-    
-    let sl0 = ["ABC";"B"]
-    let sl1 = ["T";"F"]
-
-    let csl = [sl0;sl1]
 
     let findMax (l:string list) = 
       let rec helper((l:string list),m) =
@@ -365,6 +357,12 @@
         printCol mm
         for j = 1 to il.Length-1 do
             printCol (List.map(fun x -> (x,maxLength-x.Length)) il.[j])
+
+    let sl0 = ["ABC";"B"]
+    let sl1 = ["T";"F"]
+
+    let csl = [sl0;sl1]
+
     ll csl
 
     //Tests
