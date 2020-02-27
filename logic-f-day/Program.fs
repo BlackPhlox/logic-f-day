@@ -1,4 +1,5 @@
-﻿
+﻿    open System
+
     type 'a tree =    
     | Node of 'a tree * 'a * 'a tree
     | Nil
@@ -305,13 +306,31 @@
             | NOR (x,y) ->  "("+print(x) + " ~+ "   + print(y)+")"
             | t -> t.ToString() 
 
-    let rec tt a = 
-        let rec aux a ins =
-            match a,ins with
-            | IN(x), _ -> (x::ins)
-            | NOT(x) , i -> aux x i
-            | _ , i -> i
+    let IOList a =
+        let rec aux a acc = 
+            match a with
+            | B x -> acc
+            | IN(x) -> x :: aux (B false) acc
+            | AND(x,y)  ->  aux x (aux y acc)
+            | NAND(x,y) ->  aux x (aux y acc)
+            | OR(x,y)   ->  aux x (aux y acc)
+            | NOR(x,y)  ->  aux x (aux y acc)
         aux a List.Empty
+
+    let ggg = IN "A" .|. IN "B"
+
+    IOList ggg
+
+    let GenLists (list:'a list) =
+        Convert.ToInt32(2.0 ** float list.Length)
+
+    let Gen2 e =
+        let size = GenLists (IOList(e))
+        [ for z in 1 .. 2 .. size+1 -> Seq.init size (fun i -> if i % z = 0 then "T" else "F") |> Seq.toList ]
+        //bs :: [ for c in 1 .. size -> Seq.init size (fun i -> i <> i) |> Seq.toList ]
+            //(Seq.init size (fun i -> false))
+
+    Gen2 ggg
 
     printfn "%-5s" ("|")
     printfn "%5d%A" (2 + 2) "A"
@@ -346,8 +365,6 @@
         for j = 1 to il.Length-1 do
             printCol (List.map(fun x -> (x,maxLength-x.Length)) il.[j])
     ll csl
-
-    let ggg = IN "A" .|. IN "B"
 
     //Tests
 
