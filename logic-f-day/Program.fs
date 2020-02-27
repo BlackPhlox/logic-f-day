@@ -325,8 +325,9 @@
         Convert.ToInt32(2.0 ** float list.Length)
 
     let Gen2 e =
-        let size = GenLists (IOList(e))
-        [ for z in 1 .. 2 .. size+1 -> Seq.init size (fun i -> if i % z = 0 then "T" else "F") |> Seq.toList ]
+        let io = IOList(e)
+        let size = GenLists (io)
+        [ for z in 1 .. size -> Seq.init io.Length (fun i -> if i % z = 0 then "T" else "F") |> Seq.toList ]
         //bs :: [ for c in 1 .. size -> Seq.init size (fun i -> i <> i) |> Seq.toList ]
             //(Seq.init size (fun i -> false))
 
