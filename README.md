@@ -25,10 +25,10 @@ A A   ~*    ~*    ~*    ~*          A A   ~*    ~*    ~*    ~*    A A ~*  ~*  A 
 ```
 
 ```c#
-TruthTable (NOT(IN "A") .&. IN "A")
-| A | A | O |
+TruthTable (NOT (AND(IN("A"),IN("B"))));;
+| A | B | O |
 | T | T | F |
-| F | T | F |
-| T | F | F |
-| F | F | F |
+| F | T | T |
+| T | F | T |
+| F | F | T |
 ```
