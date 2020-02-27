@@ -105,20 +105,22 @@
     let (.&.)  a b = AND (a, b)
     let (.-&.) a b = NAND(a, b)
 
-    let rec gateString g =
-        match g with 
-        //Prim
-        | B x        -> x.ToString()
-        //IO
-        | IN   (x)   -> x
-        | OUT  (x,y) -> x  + "=" + gateString (y)
-        //Gates
-        | NOT  (x)   -> "~"+ gateString(x)
-        | AND  (x,y) -> "("+ gateString(x) + " * "  + gateString(y)+")"
-        | NAND (x,y) -> "("+ gateString(x) + " ~* " + gateString(y)+")"
-        | OR   (x,y) -> "("+ gateString(x) + " + "  + gateString(y)+")"
-        | NOR  (x,y) -> "("+ gateString(x) + " ~+ " + gateString(y)+")"
-        | XOR  (x,y) -> "("+ gateString(x) + " x+ " + gateString(y)+")"
+    let gateString g =
+        let rec aux g =
+            match g with 
+            //Prim
+            | B x        -> x.ToString()
+            //IO
+            | IN   (x)   -> x
+            | OUT  (x,y) -> x  + "=" + aux (y)
+            //Gates
+            | NOT  (x)   -> "~"+ aux(x)
+            | AND  (x,y) -> "("+ aux(x) + " * "  + aux(y)+")"
+            | NAND (x,y) -> "("+ aux(x) + " ~* " + aux(y)+")"
+            | OR   (x,y) -> "("+ aux(x) + " + "  + aux(y)+")"
+            | NOR  (x,y) -> "("+ aux(x) + " ~+ " + aux(y)+")"
+            | XOR  (x,y) -> "("+ aux(x) + " x+ " + aux(y)+")"
+        aux g
 
     let gateTree g =
         let rec aux g =
@@ -309,7 +311,9 @@
             | OR (x,y) ->   "("+print(x) + " + "   + print(y)+")"
             | NOR (x,y) ->  "("+print(x) + " ~+ "   + print(y)+")"
             | t -> t.ToString() 
+    
 
+    //Truthtable generation
     let IOList a =
         let rec aux a acc = 
             match a with
@@ -372,12 +376,6 @@
         let com = io::newt
         ll com
 
-    (*
-    let meh3 = [for i in fs -> (i >>> 0) % 2]
-    let meh2 = [for i in fs -> (i >>> 1)%2]
-    let meh = [for i in fs -> (i >>> 2)%2]
-    *)
-
 
     //Tests
 
@@ -429,4 +427,5 @@
     let out = gateEval ft st
 
     PrintGateTree (gs1)
+    TruthTable ((NOT (IN "A").-&. IN "B") .*|. NOT (IN "A" .|. NOT(IN "A")))
         
