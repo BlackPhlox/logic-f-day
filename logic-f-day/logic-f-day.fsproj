@@ -4,9 +4,11 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>logic_f_day</RootNamespace>
+    <Authors>Black Phlox</Authors>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="PrintUtil.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
