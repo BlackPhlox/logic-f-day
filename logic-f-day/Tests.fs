@@ -1,4 +1,5 @@
 ﻿//#load "C:/Users/thelu/source/repos/Logic-F-day/logic-f-day/PrintUtil.fs";;
+//#load "C:/Users/thelu/source/repos/Logic-F-day/logic-f-day/Program.fs";;
 
 module Tests
     //Load in interactive from here V
@@ -87,3 +88,32 @@ module Tests
     t01.PrintTree()
     TruthTable t01
     t01simp.PrintTree()
+
+    //NAND Conversion Test
+
+    let test01 = (IN "A" .-&. IN "B")
+    let result = nandGateSimplify test01
+
+    let test02 = (B true .-&. B false)
+    let result2 = nandGateSimplify test02
+
+    let test03 = ((NOT (IN "A").-&. IN "B") .*|. NOT (IN "A" .|. NOT(IN "A")))
+    let result3 = nandGateSimplify test03
+    let result31 = nandGateify test03
+
+    let test04 = (IN "A" .-|. IN "B")
+    let result4 = nandGateSimplify test04
+
+    let test05 = (IN "A" .&. IN "B")
+    let result5 = nandGateSimplify test05
+
+    let test06 = (IN "A" .|. IN "B")
+    let result6 = nandGateSimplify test06
+
+    let test07 = (IN "A" .*|. IN "B")
+    let result7 = nandGateSimplify test07
+    let result71 = nandGateify test07
+
+    let test08 = XNOR(IN "A",IN "B")
+    let result8 = nandGateSimplify test08
+    let result81 = nandGateify test08

@@ -239,26 +239,41 @@ module Program
             | NOR(x,y)  -> aux (NOT (OR(x,y))) st
             | x -> g        
         aux g st
+    
+    let nandGateify g =
+        let rec aux g =
+            match g with
+            | B x -> B x
+            | IN s -> IN s
+            | NOT(AND(x,y)) -> NAND(aux x, aux y)
+            | OUT (s,x) -> OUT (s,x) 
+            | T x -> T x
+            | NAND(x,y) -> NAND((aux x),(aux y))
+            | NOT(x)    -> 
+                let xR = aux x
+                NAND(xR,xR)
+            | NOR(x,y)  -> 
+                let mid = NAND(aux (NOT x),aux (NOT y))
+                aux (NAND(mid,mid))
+            | OR(x,y)   -> NAND(aux (NOT x),aux (NOT y))
+            | AND(x,y)  -> 
+                let mid = NAND(aux x, aux y)
+                aux (mid .-&. mid)
+            | XOR(x,y)  -> 
+                let mid = x .-&. y
+                let ma = mid .-&. x
+                let ba = mid .-&. y
+                aux (ma .-&. ba)
+            | XNOR(x,y) -> 
+                let mida = x .-&. x
+                let midb = y .-&. y
+                let midrc = x .-&. y
+                let midic = mida .-&. midb
+                aux (midrc .-&. midic)
+        aux g
 
-    (*
-    let rec nandGateSimplify g =
-        match g with 
-        | NAND(x,y) -> nandGateSimplify x .-&. nandGateSimplify y
-        | NOT(x)    -> nandGateSimplify (x .-&. x)
-        | OR(x,y)   -> nandGateSimplify (NOT x .-&. NOT y)
-        | NOR(x,y)  -> 
-            let mid = NOT x .-&. NOT y
-            nandGateSimplify (gateSimplify mid .-&. mid)
-        | AND(x,y)  -> 
-            let mid = x .&. y
-            nandGateSimplify (gateSimplify mid .-&. mid)
-        | XOR(x,y)  -> 
-            let mid = x .-&. y
-            let ma = mid .-&. x
-            let ba = mid .-&. y
-            nandGateSimplify (ma .-&. ba)
-      //| g         -> gateSimplify g
-    *)
+    let nandGateSimplify g =
+        nandGateify g |> gateSimplify
 
     let rec restrictedGateSimplify g gates:gExp list =
         List.Empty    
