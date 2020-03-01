@@ -151,7 +151,7 @@ module Program =
             | EVAL t -> EVAL(not t)
             | TYPE _ -> TYPE a
         | AND (x,y) -> 
-            gateMap gateEval OR x y st 
+            gateMap gateEval AND x y st 
                 (fun a b -> if a && b then EVAL true else EVAL false)
                 (fun a b -> if a then TYPE b else EVAL false)
                 (fun a b -> if b then TYPE a else EVAL false)
@@ -173,62 +173,75 @@ module Program =
 
     //Know which gates are not allowed to be used, using map of gate types?
 
+    let sFind g st f fn =
+        let r = Map.tryFind g st
+        if r.IsSome then f else fn
+    
     //How to do commutative?
-    let rec gateSimplify g =
-        match g with
-        //Redundancy Laws
+    let gateSimplify g = 
+        let mutable st = Map.empty
+        let rec aux g st =
+            match g with
+            | B x -> B x
+            (*
+            | IN x -> 
+                let r = Map.tryFind x st
+                if r.IsSome then aux r.Value st else aux (IN x) (Map.add x (B true) st)
+            *)
+            | NOT a ->
+                let x = aux a st
+                match x with 
+                | a when a = NOT a -> a
+                | B a when a = false -> B true
+                | B a when a = true  -> B false
+                | a -> NOT a
+            | AND(a,b) ->
+                let x = aux a st
+                let y = aux b st
+                match (x,y) with
+                | x,y when x = y -> x
+                | x,y when NOT(x) = y || NOT(y) = x -> B false
+                | x1,OR(x2,y2) when x1 = x2 || x1 = y2 -> x1
+                | OR(x1,y1),OR(x2,(NOT y2)) when x1=x2 && y1 = y2 -> x1
+                | x1,OR (NOT x2, y1) when x1 = x2 -> AND(x1,y1)
+                | x,y -> //Identity Law
+                    let p = (gateEval x st)
+                    let q = (gateEval y st)
+                    match (p,q) with
+                    | EVAL p, EVAL q -> B (p && q)
+                    | TYPE _, EVAL q when q = false -> B false
+                    | TYPE p, EVAL q when q = true  -> p 
+                    | EVAL p, TYPE _ when p = false -> B false
+                    | EVAL p, TYPE q when p = true  -> q
+                    | p , q -> AND (getgExp p, getgExp q)
+            | OR(a,b) ->
+                let x = aux a st
+                let y = aux b st
+                match (x,y) with
+                | x,y when x = y -> x
+                | x,y when NOT(x) = y || NOT(y) = x -> B true
+                | x,y when B true = x || B true = y -> B true
+                | x1,AND(x2,y2) when x1 = x2 || x1 = y2 -> x1
+                | AND(x1,y1),AND(x2,(NOT y2)) when x1=x2 && y1 = y2 -> x1
+                | x1,AND (NOT x2, y1) when x1 = x2 -> OR(x1,y1)
+                | x,y -> //Identity Law
+                    let q = (gateEval x st)
+                    let p = (gateEval y st)
+                    match q,p with
+                    | EVAL q, EVAL p -> B (q || p)
+                    | TYPE q, EVAL p when p = false -> q 
+                    | TYPE _, EVAL p when p = true  -> B true 
+                    | EVAL q, TYPE p when q = false -> p
+                    | EVAL q, TYPE _ when q = true  -> B true 
+                    | q, p -> OR (getgExp q, getgExp p)
+            | NAND(x,y) -> aux (NOT (AND(x,y))) st
+            | NOR(x,y)  -> aux (NOT (OR(x,y))) st
+            | x -> g        
+        aux g st
 
-        //Absorption
-        | AND(x1,OR (x2,_)) when x1 = x2 -> gateSimplify x1
-        | OR (x1,AND(x2,_)) when x1 = x2 -> gateSimplify x1
+    let st01 = (IN "A").&.(NOT (IN "A"))
 
-        | AND(OR (x1,y1),OR (x2,NOT y2))  when x1 = x2 && y1 = y2 -> gateSimplify x1
-        | OR (AND(x1,y1),AND(x2,NOT y2)) when x1 = x2 && y1 = y2 -> gateSimplify x1
-
-        | AND(x1,OR (NOT x2, y1)) when x1 = x2 -> AND(gateSimplify x1, gateSimplify y1)
-        | OR (x1,AND(NOT x2, y1)) when x1 = x2 -> OR(gateSimplify x1, gateSimplify y1)
-
-        //Idempotent Law
-        | AND(x,y) when x = y -> x
-        | OR (x,y) when x = y -> x
-
-        | AND(NOT(x1),x2) when x1 = x2 -> B false
-        | OR (NOT(x1),x2) when x1 = x2 -> B true
-
-        //Identity Law
-        | AND(x,y) -> 
-            let a = (gateEval x Map.empty)
-            let b = (gateEval y Map.empty)
-            match a,b with
-            | EVAL _, EVAL _ -> B (getBool(gateEval g Map.empty))
-            | TYPE _, EVAL b when b = false -> B false
-            | TYPE a, EVAL b when b = true -> a 
-            | EVAL a, TYPE _ when a = false -> B false
-            | EVAL a, TYPE b when a = true -> b 
-            | a , b -> AND (getgExp a, getgExp b)
-
-        | OR(x,y) -> 
-            let a = (gateEval x Map.empty)
-            let b = (gateEval y Map.empty)
-            match a,b with
-            | EVAL _, EVAL _ -> B (getBool(gateEval g Map.empty))
-            | TYPE a, EVAL b when b = false -> a 
-            | TYPE _, EVAL b when b = true  -> B true 
-            | EVAL a, TYPE b when a = false -> b
-            | EVAL a, TYPE _ when a = true  -> B true 
-            | a, b -> OR (getgExp a, getgExp b)
-        
-        //Complement Law
-        | AND(x, NOT y) when x = y -> B false
-        | OR (x, NOT y) when x = y -> B false
-
-        | NOT(B x) when x = false -> B true
-        | NOT(B x) when x = true -> B false
-        
-        | NOT(NOT x)     -> gateSimplify x                 //Involution Law
-        | NOT(AND(x,y))  -> gateSimplify (NOT x .|. NOT y) //DeMorgan’s First Law 
-        | NOT(OR (x,y))  -> gateSimplify (NOT x .&. NOT y) //DeMorgan’s Second Law
-        | _ -> g
+    gateSimplify st01
 
     let rec nandGateSimplify g =
         match g with 
@@ -246,7 +259,7 @@ module Program =
             let ma = mid .-&. x
             let ba = mid .-&. y
             nandGateSimplify (ma .-&. ba)
-        | g         -> gateSimplify g
+      //| g         -> gateSimplify g
 
     let rec restrictedGateSimplify g gates:gExp list =
         List.Empty    
@@ -255,14 +268,17 @@ module Program =
     let IOList a =
         let rec aux a acc = 
             match a with
-            | B x -> acc
-            | IN(x) -> x :: aux (B false) acc
-            | NOT(x)  ->  aux x acc
+            | B x       ->  acc
+            | T x       ->  aux x acc
+            | IN(x)     ->  x :: aux (B false) acc
+            | OUT(x,y)  ->  x :: aux y acc
+            | NOT(x)    ->  aux x acc
             | AND(x,y)  ->  aux x (aux y acc)
             | NAND(x,y) ->  aux x (aux y acc)
             | OR(x,y)   ->  aux x (aux y acc)
             | NOR(x,y)  ->  aux x (aux y acc)
             | XOR(x,y)  ->  aux x (aux y acc)
+            | XNOR(x,y) ->  aux x (aux y acc)
         aux a List.Empty
 
     let TruthTable g =
@@ -323,8 +339,6 @@ module Program =
     let sr_r071= string (gateSimplify( IN "A" .&. NOT(IN "A")))             //False
     let sr_r08 = string (gateSimplify( NOT(IN "A") .|. IN "A"))             //True
     let sr_r081= string (gateSimplify( IN "A" .|. NOT (IN "A")))            //True
-    let sr_r09 = string (gateSimplify( IN "A" .&. NOT(IN "A")))             //A AND B
-    let sr_r10 = string (gateSimplify( IN "A" .|. (NOT(IN "A") .&. IN "B")))//A OR  B
 
     let gs1 = nandGateSimplify (gateSimplify ((NOT (IN "A").-&. IN "B") .*|. NOT (IN "A" .|. NOT(IN "A"))))
 
