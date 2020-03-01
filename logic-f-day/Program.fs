@@ -1,6 +1,6 @@
 ﻿//#load "C:/Users/thelu/source/repos/Logic-F-day/logic-f-day/PrintUtil.fs";;
 
-module Program =
+module Program
     //Load in interactive from here V
     open PrintUtil
 
@@ -97,21 +97,6 @@ module Program =
     let (.&.)  a b = AND (a, b)
     let (.-&.) a b = NAND(a, b) 
 
-    //Tree Tests
-
-    let type01 = OUT("O1", OUT("O2",((IN "A") .&. B true)) .&. (IN "B"))
-    printfn "%A" (type01.ToString())
-    type01.PrintTree()
-
-    let type02 = (B true) .&. (B false)
-    printfn "%A" (type02.ToString())
-    type02.PrintTree()
-
-    let type03 = ((IN "A") .*|. (IN "A")) .&. (IN "B")
-    printfn "%A" (type03.ToString())
-    type03.PrintTree()
-
-
     //Evaluation
 
     let getBoolB (g:gExp) : bool =
@@ -125,6 +110,7 @@ module Program =
     let getgExp (b:gExpResult) : gExp =
         match b with
         | TYPE x -> x
+        | EVAL x -> B x
 
     let gateMap f gate x y st ee et te :gExpResult =
         let a = (f x st)
@@ -168,7 +154,6 @@ module Program =
         | NAND (x,y) -> gateEval (NOT (AND(x,y))) st
         | NOR  (x,y) -> gateEval (NOT (OR (x,y))) st
         | XNOR (x,y) -> gateEval (NOT (XOR(x,y))) st
-
     //Simplify / Reduction
 
     //Know which gates are not allowed to be used, using map of gate types?
@@ -178,6 +163,8 @@ module Program =
         if r.IsSome then f else fn
     
     //How to do commutative?
+    //Currently not correct
+    
     let gateSimplify g = 
         let mutable st = Map.empty
         let rec aux g st =
@@ -234,15 +221,26 @@ module Program =
                     | EVAL q, TYPE p when q = false -> p
                     | EVAL q, TYPE _ when q = true  -> B true 
                     | q, p -> OR (getgExp q, getgExp p)
+            | XOR (a,b) -> 
+                let x = aux a st
+                let y = aux b st
+                match (x,y) with
+                | x,y when NOT(x) = y || NOT(y) = x -> B true
+                | x1,OR(x2,y2) when x1 = x2 -> aux (AND(NOT(x1),y2)) st
+                | x,y -> //Identity Law
+                    let q = (gateEval x st)
+                    let p = (gateEval y st)
+                    match q,p with
+                    | EVAL q, EVAL p -> B (q <> p)
+                    | TYPE q, EVAL p -> if p then (NOT q) else q
+                    | EVAL q, TYPE p -> if q then (NOT p) else p
+                    | q, p -> OR (getgExp q, getgExp p)
             | NAND(x,y) -> aux (NOT (AND(x,y))) st
             | NOR(x,y)  -> aux (NOT (OR(x,y))) st
             | x -> g        
         aux g st
 
-    let st01 = (IN "A").&.(NOT (IN "A"))
-
-    gateSimplify st01
-
+    (*
     let rec nandGateSimplify g =
         match g with 
         | NAND(x,y) -> nandGateSimplify x .-&. nandGateSimplify y
@@ -260,6 +258,7 @@ module Program =
             let ba = mid .-&. y
             nandGateSimplify (ma .-&. ba)
       //| g         -> gateSimplify g
+    *)
 
     let rec restrictedGateSimplify g gates:gExp list =
         List.Empty    
@@ -298,69 +297,3 @@ module Program =
 
         let com = io::newt
         printTable com
-
-
-    //Tests
-
-    let st = Map.ofList [("A", B true)]
-
-    let v1 = gateEval (NOT (B true)) st
-    let v2 = gateEval (NOT (IN("B"))) st
-    let v3 = gateEval (NOT (AND(IN("A"),IN("B")))) st
-    let v4 = gateEval (OUT("O",NOT (B true)).|.(AND(IN("A"),IN("B")))) st
-
-    let gs01 = gateSimplify (NOT (NOT(IN("B"))))
-    let gs02 = gateSimplify (NOT (AND(IN("A"),IN("B"))))
-
-    let gs03 = nandGateSimplify (gateSimplify (NOT (AND(IN("A"),IN("B")))))
-    
-    let gs04 = gateSimplify(OR(IN "A",IN "A"))
-
-    let gs05 = gateSimplify(AND(IN "x",OR(IN "x",IN "B")))
-
-    //Test Simplify rules
-
-    //Identity
-    let sr_i00 = "Identity"
-    let sr_i01 = string (gateSimplify(IN "A" .&. IN "A"))//A
-    let sr_i02 = string (gateSimplify(IN "A" .|. IN "A"))//A
-    let sr_i03 = string (gateSimplify((IN "A" .&. IN "B") .|. (IN "A" .&. (NOT (IN "B"))))) //A //Precedence mistake(No pre.)
-    let sr_i04 = string (gateSimplify((IN "A" .|. IN "B") .&. (IN "A" .|. (NOT (IN "B"))))) //A
-
-    //Redundancy
-    let sr_r00 = "Redundancy"
-    let sr_r01 = string (gateSimplify((IN "A" .&. (IN "A" .|. IN "B"))))    //A
-    let sr_r02 = string (gateSimplify((IN "A" .|. (IN "A" .&. IN "B"))))    //A
-    let sr_r03 = string (gateSimplify( B false .&. IN "A"))                 //False
-    let sr_r04 = string (gateSimplify( B false .|. IN "A"))                 //A
-    let sr_r05 = string (gateSimplify( B true  .&. IN "A"))                 //A
-    let sr_r06 = string (gateSimplify( B true  .|. IN "A"))                 //True
-    let sr_r07 = string (gateSimplify( NOT(IN "A") .&. IN "A"))             //False
-    let sr_r071= string (gateSimplify( IN "A" .&. NOT(IN "A")))             //False
-    let sr_r08 = string (gateSimplify( NOT(IN "A") .|. IN "A"))             //True
-    let sr_r081= string (gateSimplify( IN "A" .|. NOT (IN "A")))            //True
-
-    let gs1 = nandGateSimplify (gateSimplify ((NOT (IN "A").-&. IN "B") .*|. NOT (IN "A" .|. NOT(IN "A"))))
-
-    let p1 = string gs1
-
-    let e1 = gateEval gs1 st
-
-    printfn "%A" (gs1)
-    gs1.PrintTree()
-
-    let ft = NOT (IN "B") .-|. IN "A"
-    ft.PrintTree()
-    let ou2 = gateSimplify ft
-    let out = gateEval ft st
-
-    gs1.PrintTree();
-
-
-    let t01 = (NOT (B false) .&. (B true) .-&. (IN "A" .-|. IN "B"))
-    t01.ToString()
-    let t01simp = gateSimplify t01
-    t01.PrintTree()
-    TruthTable t01
-    t01simp.PrintTree()
-        

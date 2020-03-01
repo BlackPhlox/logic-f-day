@@ -10,6 +10,7 @@
   <ItemGroup>
     <Compile Include="PrintUtil.fs" />
     <Compile Include="Program.fs" />
+    <Compile Include="Tests.fs" />
   </ItemGroup>
 
 </Project>
