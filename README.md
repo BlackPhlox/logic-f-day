@@ -1,6 +1,16 @@
 # Logic-F-day
 Implementing the same functionality of Logic Friday to F#
 
+Declaring variables. 
+In is where you define a variable, giving a state in you evaluation will use the variables's value
+Out work as a probe, which binds the result to the name
+```c#
+let inVar =  (IN "VariableName");;
+
+(Not implemented yet)
+let outVar = (OUT ("OutVar", B true));;
+```
+
 Print to string and simplify/minimize gate composition
 ```c#
 let simp = (AND (OR (IN "A", IN "B"), OR (IN "A", NOT (IN "B"))));;
