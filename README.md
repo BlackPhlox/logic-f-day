@@ -14,6 +14,25 @@ val it : gExp = IN "A"
 
 ```
 
+Current infix operators for the syntax of the different gates
+```c#
+AND  :  .&.
+NAND : .-&.
+OR   :  .|.
+NOR  : .-|.
+XOR  : .*|.
+```
+Syntax for displaying the different gates
+```c#
+NOT  : ~
+AND  : *  
+NAND : ~* 
+OR   : +  
+NOR  : ~+ 
+XOR  : x+ 
+XNOR : x~+
+```
+
 Evaluate gates using variables
 ```c#
 let st = Map.ofList [("A", B true)];;
