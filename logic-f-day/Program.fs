@@ -1,78 +1,10 @@
 ﻿//#load "C:/Users/thelu/source/repos/Logic-F-day/logic-f-day/PrintUtil.fs";;
+//#load "C:/Users/thelu/source/repos/Logic-F-day/logic-f-day/Gate.fs";;
 
 module Program
     //Load in interactive from here V
     open PrintUtil
-
-    type gExp =
-        //Primitive
-        | B of bool
-        
-        //Type def.
-        | T    of gExp
-
-        //IO
-        | IN  of string
-        | OUT of string * gExp
-
-        //Gates
-        | NOT  of gExp
-        | NAND of (gExp * gExp)
-        | AND  of (gExp * gExp)
-        | OR   of (gExp * gExp)
-        | NOR  of (gExp * gExp)
-        | XOR  of (gExp * gExp)
-        | XNOR of (gExp * gExp)
-
-        member g.represent =
-            match g with 
-            | NOT  _ -> "~"
-            | AND  _ -> "*"  
-            | NAND _ -> "~*" 
-            | OR   _ -> "+"  
-            | NOR  _ -> "~+" 
-            | XOR  _ -> "x+" 
-            | XNOR _ -> "x~+"
-            | _ -> "No representation"
-
-        override g.ToString() =
-            let rec aux g =
-                match g with 
-                //Prim
-                | B x        -> x.ToString()
-                | T x        -> x.ToString()
-                //IO
-                | IN   (x)   -> x
-                | OUT  (x,y) -> x  + "=" + aux (y)
-                //Gates
-                | NOT  (x)   -> g.represent + aux(x)
-                | AND  (x,y) -> "("+ aux(x) + g.represent + aux(y)+")"
-                | NAND (x,y) -> "("+ aux(x) + g.represent + aux(y)+")"
-                | OR   (x,y) -> "("+ aux(x) + g.represent + aux(y)+")"
-                | NOR  (x,y) -> "("+ aux(x) + g.represent + aux(y)+")"
-                | XOR  (x,y) -> "("+ aux(x) + g.represent + aux(y)+")"
-                | XNOR (x,y) -> "("+ aux(x) + g.represent + aux(y)+")"
-            aux g                             
-
-        member g.PrintTree() = 
-            let rec aux g =
-                match g with
-                //Prim
-                | B   (x)    -> Node (Nil   , (if x then "T" else "F") , Nil  )
-                //IO
-                | IN  (x)    -> Node (Nil   , x           , Nil  )
-                | OUT (x,y)  -> Node (Nil   , x           , aux y)
-                //Gates
-                | NOT (a)    -> Node (Nil   , g.represent , aux a)
-                | AND (a,b)  -> Node (aux a , g.represent , aux b)
-                | NAND(a,b)  -> Node (aux a , g.represent , aux b)
-                | OR  (a,b)  -> Node (aux a , g.represent , aux b)
-                | NOR (a,b)  -> Node (aux a , g.represent , aux b)
-                | XOR (a,b)  -> Node (aux a , g.represent , aux b)
-                | XNOR(a,b)  -> Node (aux a , g.represent , aux b)
-            PrintTree (aux g) 
-
-        //member g.TruthTable() = 
+    open Gate
 
     type gExpr = 
     | PRIM of gExp

@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <Compile Include="PrintUtil.fs" />
+    <Compile Include="Gate.fsi" />
+    <Compile Include="Gate.fs" />
     <Compile Include="Program.fs" />
     <Compile Include="Tests.fs" />
   </ItemGroup>
