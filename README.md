@@ -32,6 +32,16 @@ OR   :  .|.
 NOR  : .-|.
 XOR  : .*|.
 ```
+Current and updated valid (Non-infix) operator syntax 
+```c#
+NOT  : !! 
+OR   : +
+AND  : *
+NAND : !* 
+NOR  : !+ 
+XOR  : *+ 
+XNOR : !*+
+```
 Syntax for displaying the different gates
 ```c#
 NOT  : ~

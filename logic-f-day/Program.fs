@@ -44,13 +44,13 @@ module Program
         | TYPE x -> x
         | EVAL x -> B x
 
-    let gateMap f gate x y st ee et te :gExpResult =
+    let gateCommutativeMap f gate x y st ee et :gExpResult =
         let a = (f x st)
         let b = (f y st)
         match a,b with
         | EVAL a, EVAL b -> ee a b
         | EVAL a, TYPE b -> et a b
-        | TYPE a, EVAL b -> te a b
+        | TYPE a, EVAL b -> et b a
         | TYPE a, TYPE b -> TYPE (gate(a,b))
 
     let rec gateEval a st = 
@@ -69,20 +69,17 @@ module Program
             | EVAL t -> EVAL(not t)
             | TYPE _ -> TYPE a
         | AND (x,y) -> 
-            gateMap gateEval AND x y st 
+            gateCommutativeMap gateEval AND x y st 
                 (fun a b -> if a && b then EVAL true else EVAL false)
                 (fun a b -> if a then TYPE b else EVAL false)
-                (fun a b -> if b then TYPE a else EVAL false)
         | OR (x,y)  -> 
-            gateMap gateEval OR x y st 
+            gateCommutativeMap gateEval OR x y st 
                 (fun a b -> if a || b then EVAL true else EVAL false)
                 (fun a b -> if a then EVAL true else TYPE b)
-                (fun a b -> if b then EVAL true else TYPE a)
         | XOR (x,y) -> 
-            gateMap gateEval XOR x y st 
+            gateCommutativeMap gateEval XOR x y st 
                 (fun a b -> if a <> b then EVAL true else EVAL false)
                 (fun a b -> if a then TYPE(NOT b) else TYPE b)
-                (fun a b -> if b then TYPE(NOT a) else TYPE a)
         | NAND (x,y) -> gateEval (NOT (AND(x,y))) st
         | NOR  (x,y) -> gateEval (NOT (OR (x,y))) st
         | XNOR (x,y) -> gateEval (NOT (XOR(x,y))) st
@@ -172,6 +169,7 @@ module Program
             | x -> g        
         aux g st
     
+    //Based from: https://en.wikipedia.org/wiki/NAND_logic#Making_other_gates_by_using_NAND_gates
     let nandGateify g =
         let rec aux g =
             match g with
