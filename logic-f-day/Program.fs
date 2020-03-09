@@ -59,7 +59,9 @@ module Program
         | T x -> TYPE x
         | IN s ->  
             let r = Map.tryFind s st
-            if r.IsSome then gateEval r.Value st else TYPE a
+            if r.IsSome then gateEval r.Value st else 
+                printfn "The variable %s is not found, defaulting to type" s
+                TYPE a
         | OUT (x,y) -> TYPE y
             //let r = Map.add x y st
             //OUTS (Map.add x (gateEval y r) Map.empty)
