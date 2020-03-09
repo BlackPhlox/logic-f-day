@@ -12,14 +12,20 @@ module Program
     | GATE of gExp
 
     //To allow dynamic evaluation
-    type gExpResult =
-        | TYPE of gExp
+     type GResult<'a> =
+        | TYPE of 'a
         | EVAL of bool
         override g.ToString() =
             match g with
             | TYPE x -> x.ToString()
             | EVAL x -> x.ToString()
      // | OUTS of Map<string,gExpResult>
+
+    let bind f = function
+    | TYPE x -> f x
+    | EVAL x -> EVAL x
+
+    let (>>=) x f = bind f x
 
     //Infix operators (No precedence implemented currently)
     let (.|.)  a b = OR  (a, b)
@@ -35,16 +41,16 @@ module Program
         match g with
         | B x -> x
     
-    let getBool (b:gExpResult) : bool =
+    let getBool (b:GResult<'a>) : bool =
         match b with
         | EVAL x -> x
 
-    let getgExp (b:gExpResult) : gExp =
+    let getgExp (b:GResult<'a>) : gExp =
         match b with
         | TYPE x -> x
         | EVAL x -> B x
 
-    let gateCommutativeMap f gate x y st ee et :gExpResult =
+    let gateCommutativeMap f gate x y st ee et :GResult<'a> =
         let a = (f x st)
         let b = (f y st)
         match a,b with
