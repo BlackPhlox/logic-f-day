@@ -12,7 +12,7 @@ module Program
     | GATE of gExp
 
     //To allow dynamic evaluation
-     type GResult<'a> =
+     type BResult<'a> =
         | TYPE of 'a
         | EVAL of bool
         override g.ToString() =
@@ -21,11 +21,34 @@ module Program
             | EVAL x -> x.ToString()
      // | OUTS of Map<string,gExpResult>
 
+    (*
     let bind f = function
     | TYPE x -> f x
     | EVAL x -> EVAL x
+    *)
 
-    let (>>=) x f = bind f x
+    let bind f a = fun s ->
+        match a s with
+        | TYPE (x, s1) -> f x s1
+        | EVAL e -> EVAL e 
+
+    //let (>>=) x f = bind f x
+
+    let (>>=) a f =
+        bind f a
+
+    let (>>>=) a b = a >>= (fun () -> b)
+
+    let ret x =
+        fun s -> TYPE (x, s)
+
+    let binop f a b =
+        a >>= fun x ->
+        b >>= fun y ->
+        ret (f x y)
+
+    let set x v = fun s ->
+        TYPE ((), (Map.add x v s))
 
     //Infix operators (No precedence implemented currently)
     let (.|.)  a b = OR  (a, b)
@@ -41,16 +64,16 @@ module Program
         match g with
         | B x -> x
     
-    let getBool (b:GResult<'a>) : bool =
+    let getBool (b:BResult<'a>) : bool =
         match b with
         | EVAL x -> x
 
-    let getgExp (b:GResult<'a>) : gExp =
+    let getgExp (b:BResult<'a>) : gExp =
         match b with
         | TYPE x -> x
         | EVAL x -> B x
 
-    let gateCommutativeMap f gate x y st ee et :GResult<'a> =
+    let gateCommutativeMap f gate x y st ee et :BResult<'a> =
         let a = (f x st)
         let b = (f y st)
         match a,b with
@@ -62,7 +85,6 @@ module Program
     let rec gateEval a st = 
         match a with
         | B x -> EVAL x
-        | T x -> TYPE x
         | IN s ->  
             let r = Map.tryFind s st
             if r.IsSome then gateEval r.Value st else 
@@ -185,7 +207,6 @@ module Program
             | IN s -> IN s
             | NOT(AND(x,y)) -> NAND(aux x, aux y)
             | OUT (s,x) -> OUT (s,x) 
-            | T x -> T x
             | NAND(x,y) -> NAND((aux x),(aux y))
             | NOT(x)    -> 
                 let xR = aux x
@@ -221,7 +242,6 @@ module Program
         let rec aux a acc = 
             match a with
             | B x       ->  acc
-            | T x       ->  aux x acc
             | IN(x)     ->  x :: aux (B false) acc
             | OUT(x,y)  ->  x :: aux y acc
             | NOT(x)    ->  aux x acc

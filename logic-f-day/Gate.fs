@@ -5,9 +5,6 @@ module Gate
     type gExp =
         //Primitive
         | B of bool
-        
-        //Type def.
-        | T    of gExp
 
         //IO
         | IN  of string
@@ -46,7 +43,6 @@ module Gate
                 match g with 
                 //Prim
                 | B x        -> x.ToString()
-                | T x        -> x.ToString()
                 //IO
                 | IN   (x)   -> x
                 | OUT  (x,y) -> x  + "=" + aux (y)
@@ -79,5 +75,3 @@ module Gate
             PrintTree (aux g) 
 
         //member g.TruthTable() = 
-
-    let meh = !!(IN "A")
