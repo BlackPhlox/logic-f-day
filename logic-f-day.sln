@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28307.902
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "logic-f-day", "logic-f-day\logic-f-day.fsproj", "{FA4B32A7-5724-4E0B-8616-50EF49099AD1}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "logic-f", "logic-f\logic-f.fsproj", "{824E1DC1-0736-42B3-9C66-F1D7E04F91D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{FA4B32A7-5724-4E0B-8616-50EF49099AD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA4B32A7-5724-4E0B-8616-50EF49099AD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA4B32A7-5724-4E0B-8616-50EF49099AD1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{824E1DC1-0736-42B3-9C66-F1D7E04F91D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{824E1DC1-0736-42B3-9C66-F1D7E04F91D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{824E1DC1-0736-42B3-9C66-F1D7E04F91D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{824E1DC1-0736-42B3-9C66-F1D7E04F91D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

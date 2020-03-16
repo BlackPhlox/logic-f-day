@@ -6,11 +6,6 @@ module Program
     open PrintUtil
     open Gate
 
-    type gExpr = 
-    | PRIM of gExp
-    | IO   of gExp
-    | GATE of gExp
-
     //To allow dynamic evaluation
      type BResult<'a> =
         | TYPE of 'a
@@ -51,6 +46,13 @@ module Program
         TYPE ((), (Map.add x v s))
 
     //Infix operators (No precedence implemented currently)
+    
+    //Prim
+    let b bo = P(B bo)
+    let i x = P(IO (IN x))
+    let o s x = P(IO (OUT(s,x))) 
+    
+    //Gates
     let (.|.)  a b = OR  (a, b)
     let (.-|.) a b = NOR (a, b)
     let (.*|.) a b = XOR (a, b)
@@ -58,61 +60,69 @@ module Program
     let (.&.)  a b = AND (a, b)
     let (.-&.) a b = NAND(a, b) 
 
-    //Evaluation
 
-    let getBoolB (g:gExp) : bool =
-        match g with
-        | B x -> x
+    //Evaluation
     
-    let getBool (b:BResult<'a>) : bool =
+    let getBool (b:BResult<'a>) =
         match b with
         | EVAL x -> x
 
-    let getgExp (b:BResult<'a>) : gExp =
+    let getgExp (b:BResult<gPrim>) =
         match b with
         | TYPE x -> x
         | EVAL x -> B x
 
-    let gateCommutativeMap f gate x y st ee et :BResult<'a> =
+    let gateCommutativeMap f gate x y st ee et :BResult<gExp> =
         let a = (f x st)
         let b = (f y st)
         match a,b with
         | EVAL a, EVAL b -> ee a b
         | EVAL a, TYPE b -> et a b
         | TYPE a, EVAL b -> et b a
-        | TYPE a, TYPE b -> TYPE (gate(a,b))
+        | TYPE a, TYPE b -> TYPE (G(gate(a,b)))
 
     let rec gateEval a st = 
         match a with
-        | B x -> EVAL x
-        | IN s ->  
-            let r = Map.tryFind s st
-            if r.IsSome then gateEval r.Value st else 
-                printfn "The variable %s is not found, defaulting to type" s
-                TYPE a
-        | OUT (x,y) -> TYPE y
-            //let r = Map.add x y st
-            //OUTS (Map.add x (gateEval y r) Map.empty)
-        | NOT x -> 
-            let t = (gateEval x st)
-            match t with
-            | EVAL t -> EVAL(not t)
-            | TYPE _ -> TYPE a
-        | AND (x,y) -> 
-            gateCommutativeMap gateEval AND x y st 
-                (fun a b -> if a && b then EVAL true else EVAL false)
-                (fun a b -> if a then TYPE b else EVAL false)
-        | OR (x,y)  -> 
-            gateCommutativeMap gateEval OR x y st 
-                (fun a b -> if a || b then EVAL true else EVAL false)
-                (fun a b -> if a then EVAL true else TYPE b)
-        | XOR (x,y) -> 
-            gateCommutativeMap gateEval XOR x y st 
-                (fun a b -> if a <> b then EVAL true else EVAL false)
-                (fun a b -> if a then TYPE(NOT b) else TYPE b)
-        | NAND (x,y) -> gateEval (NOT (AND(x,y))) st
-        | NOR  (x,y) -> gateEval (NOT (OR (x,y))) st
-        | XNOR (x,y) -> gateEval (NOT (XOR(x,y))) st
+        | P x -> match x with                 
+                 | B x -> EVAL x
+                 | IO io -> 
+                     match io with
+                     | IN s ->  
+                         let r = Map.tryFind s st
+                         if r.IsSome then gateEval r.Value st else 
+                             //printfn "The variable %s is not found, defaulting to type" s
+                             TYPE a
+                     | OUT (x,y) -> TYPE y
+                         //gateEval y st
+        | G a -> 
+            match a with
+            | NOT x -> 
+                let t = (gateEval x st)
+                match t with
+                | EVAL t -> EVAL(not t)
+                | TYPE _ -> TYPE (G a)
+            | AND (x,y) -> 
+                gateCommutativeMap gateEval AND x y st 
+                    (fun a b -> if a && b then EVAL true else EVAL false)
+                    (fun a b -> if a then TYPE b         else EVAL false)
+            | OR (x,y)  -> 
+                gateCommutativeMap gateEval OR x y st 
+                    (fun a b -> if a || b then EVAL true else EVAL false)
+                    (fun a b -> if a      then EVAL true else TYPE b)
+            | XOR (x,y) -> 
+                gateCommutativeMap gateEval XOR x y st 
+                    (fun a b -> if a <> b then EVAL true   else EVAL false)
+                    (fun a b -> if a      then TYPE(G (NOT b)) else TYPE b)
+            | NAND (x,y) -> gateEval (G(NOT (G(AND(x,y))))) st
+            | NOR  (x,y) -> gateEval (G(NOT (G(OR (x,y))))) st
+            | XNOR (x,y) -> gateEval (G(NOT (G(XOR(x,y))))) st
+
+
+    let rec getBoolB (g:gExp) : bool =
+        match g with
+        | P a -> 
+            match a with
+            | B x -> x
     //Simplify / Reduction
 
     //Know which gates are not allowed to be used, using map of gate types?
@@ -123,7 +133,7 @@ module Program
     
     //How to do commutative?
     //Currently not correct
-    
+    (*
     let gateSimplify g = 
         let mutable st = Map.empty
         let rec aux g st =
@@ -237,32 +247,55 @@ module Program
     let rec restrictedGateSimplify g gates:gExp list =
         List.Empty    
 
+    *)
+
     //Truthtable generation
-    let IOList a =
+    let all_IOs a io =
         let rec aux a acc = 
             match a with
-            | B x       ->  acc
-            | IN(x)     ->  x :: aux (B false) acc
-            | OUT(x,y)  ->  x :: aux y acc
-            | NOT(x)    ->  aux x acc
-            | AND(x,y)  ->  aux x (aux y acc)
-            | NAND(x,y) ->  aux x (aux y acc)
-            | OR(x,y)   ->  aux x (aux y acc)
-            | NOR(x,y)  ->  aux x (aux y acc)
-            | XOR(x,y)  ->  aux x (aux y acc)
-            | XNOR(x,y) ->  aux x (aux y acc)
+            | P a ->
+                match a with
+                | B x       ->  acc
+                | IO b -> io b aux acc
+            | G a -> 
+                match a with
+                | NOT(x)    ->  aux x acc
+                | AND(x,y)  ->  aux x (aux y acc)
+                | NAND(x,y) ->  aux x (aux y acc)
+                | OR(x,y)   ->  aux x (aux y acc)
+                | NOR(x,y)  ->  aux x (aux y acc)
+                | XOR(x,y)  ->  aux x (aux y acc)
+                | XNOR(x,y) ->  aux x (aux y acc)
         aux a List.Empty
 
+    let InList a =
+        all_IOs a (fun b ax ac -> 
+            match b with 
+            | IN(x)     ->  x :: ax (P(B false)) ac
+            | OUT(x,y)  ->  x :: ax y ac)
+    
+    let OutList a =
+        all_IOs a (fun b ax ac -> 
+            match b with 
+            | IN(x)     ->  ac
+            | OUT(x,y)  ->  x :: ax y ac)
+
     let TruthTable g =
-        let io = IOList g
-        let bools = GenLists io
-        let sts = [for bl in bools -> List.map2(fun x y -> (y, B x)) bl io]
+        let ins = InList g
+        let bools = GenLists ins
+        let sts = [for bl in bools -> List.map2(fun x y -> (y, P (B x))) bl ins]
+
+        let outs = OutList g
 
         let results = List.map (fun x -> gateEval g (Map.ofList x)) sts
 
-        let io = io @ ["O"]
+        let outResults = 0
+
+        let io = ins @ ["O"]// @ outs
 
         let bb = List.map (fun x -> getBool x) results
+
+        //let b2 = bb |> List.choose id
 
         let rows = List.map(fun j -> List.map (fun (x,y) -> if getBoolB y then "T" else "F" ) j ) sts 
 

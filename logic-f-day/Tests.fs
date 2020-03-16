@@ -7,10 +7,34 @@ module Tests
     open Program
     open Gate
 
+
     //Tests
+
+    //New Test
+    
+    let nType01 = ((b true) + (b false) + i "A")
+    nType01.PrintTree()
+    //TruthTable nType01
+    printfn "%A" ((gateEval nType01 Map.empty).ToString())
+
+    let nType02 = o "o" ((b true) + (b false) + i "A")
+    nType02.PrintTree()
+    //TruthTable nType01
+    printfn "%A" ((gateEval nType02 Map.empty).ToString())
+    
+
+    (*END GAME - Recursive Out Implementation*)
+    (*
+    let nRecType01 = o "o" ((i "A" * i "o1") * o "o1" (i "B" + i "o1"))
+
+    nRecType01.PrintTree()
+    //TruthTable nType01
+    printfn "%A" ((gateEval nRecType01 Map.empty).ToString())
+    *)
+    
     
     //Tree Tests
-
+    (*
     let type01 = OUT("O1", OUT("O2",((IN "A") + B true)) + (IN "B"))
     printfn "%A" (type01.ToString())
     type01.PrintTree()
@@ -35,7 +59,7 @@ module Tests
 
     let v1 = gateEval (NOT (B true)) st
     let v2 = gateEval (NOT (IN("B"))) st
-    let v3 = gateEval (NOT (AND(IN("A"),IN("B")))) st
+    let v3 = gateEval (NOT (AND(IO (IN("A")),IN("B")))) st
     let v4 = gateEval (OUT("O",NOT (B true)).|.(AND(IN("A"),IN("B")))) st
 
     let gs01 = gateSimplify (NOT (NOT(IN("B"))))
@@ -120,3 +144,4 @@ module Tests
     let test08 = XNOR(IN "A",IN "B")
     let result8 = nandGateSimplify test08
     let result81 = nandGateify test08
+    *)
